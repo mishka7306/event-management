@@ -38,15 +38,22 @@ function QuotationForm() {
   };
 
   const calculateSectionSubtotal = (section) => {
+    
     let subtotal = 0;
 
     section.rows.forEach((row) => {
       subtotal += Number(row.total);
     });
-
+     
     const supervisionAmount = (subtotal * section.supervision) / 100;
     return subtotal + supervisionAmount;
   };
+  
+  const formatDate = (dateString) => {
+  if (!dateString) return "";
+  const [year, month, day] = dateString.split("-");
+  return `${day}-${month}-${year}`;
+};
 
   const handleChange = (sIndex, rIndex, field, value) => {
     const updated = [...sections];
@@ -103,6 +110,34 @@ function QuotationForm() {
 
   // ✅ PDF
   const downloadPDF = async () => {
+    try {
+    const payload = {
+      name: event || "Quotation",
+      client,
+      date,
+      eventDate,
+      venue,
+      total: manualGrandTotal || grandTotal,
+      rounded_total: manualRoundedTotal,
+      amount_words: amountInWords,
+      approved_by: approvedBy,
+      sections: sections
+    };
+
+    const response = await axios.post(
+      "https://event-management-n7xs7d73m-mishka7306s-projects.vercel.app/api/save-event",
+      payload
+    );
+
+    console.log(response.data);
+  } catch (error) {
+    console.error(error);
+    alert("Error saving data");
+  }
+
+
+
+
     const doc = new jsPDF();
      await saveToDatabase();
 
@@ -125,9 +160,9 @@ function QuotationForm() {
       doc.setFontSize(10);
       doc.text(companyAddress, 50, 25);
 
-      doc.text(`Date: ${date}`, 140, 15);
+      doc.text(`Date: ${formatDate(date)}`, 140, 15);
       doc.text(`Client: ${client}`, 140, 22);
-      doc.text(`Event Date: ${eventDate}`, 140, 29);
+      doc.text(`Event Date: ${formatDate(eventDate)}`, 140, 29);
       doc.text(`Event: ${event}`, 140, 36);
       doc.text(`Venue: ${venue}`, 140, 43);
 
@@ -232,31 +267,8 @@ if (currentY > 260) {
      });
      };
 
-  const saveToDatabase = async () => {
-  try {
-    const payload = {
-      name: event || "Quotation",
-      client,
-      date,
-      eventDate,
-      venue,
-      total: manualGrandTotal || grandTotal,
-      rounded_total: manualRoundedTotal,
-      amount_words: amountInWords,
-      approved_by: approvedBy,
-      sections: sections
-    };
-
-    const response = await axios.post(
-      "https://event-management-n7xs7d73m-mishka7306s-projects.vercel.app/api/save-event",
-      payload
-    );
-
-    console.log(response.data);
-  } catch (error) {
-    console.error(error);
-    alert("Error saving data");
-  }
+ const saveToDatabase = async () => {
+  
 };
 
 
